@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parking Slot Monitor</title>
+    <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+    <div class="container mx-auto p-6">
+        <h1 class="text-4xl font-bold text-center text-blue-600 mb-6">Parking Slot Availability</h1>
+        
+        <!-- Slot Container -->
+        <div id="slot-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <!-- Initial placeholders for slots -->
+            <div id="slot-1" class="p-6 rounded-lg shadow-lg bg-gray-300 text-black">
+                <h2 class="text-2xl font-bold">Slot 1</h2>
+                <p class="mt-2 text-lg">Loading...</p>
+            </div>
+            <div id="slot-2" class="p-6 rounded-lg shadow-lg bg-gray-300 text-black">
+                <h2 class="text-2xl font-bold">Slot 2</h2>
+                <p class="mt-2 text-lg">Loading...</p>
+            </div>
+            <div id="slot-3" class="p-6 rounded-lg shadow-lg bg-gray-300 text-black">
+                <h2 class="text-2xl font-bold">Slot 3</h2>
+                <p class="mt-2 text-lg">Loading...</p>
+            </div>
+            <div id="slot-4" class="p-6 rounded-lg shadow-lg bg-gray-300 text-black">
+                <h2 class="text-2xl font-bold">Slot 4</h2>
+                <p class="mt-2 text-lg">Loading...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+
+        // Update parking slots dynamically
+        socket.on('sensor_update', (data) => {
+            data.forEach((slot) => {
+                const slotElement = document.getElementById(`slot-${slot.sensor_id}`);
+                const isOccupied = slot.status === "Occupied";
+
+                // Update the slot's background color and text
+                if (slotElement) {
+                    slotElement.className = `
+                        p-6 rounded-lg shadow-lg transition-all
+                        ${isOccupied ? "bg-red-500 text-white" : "bg-green-500 text-white"}
+                    `;
+                    slotElement.querySelector('p').textContent = slot.status;
+                }
+            });
+        });
+
+        socket.on('connect', () => {
+            console.log('WebSocket connected');
+        });
+
+        socket.on('disconnect', () => {
+            console.log('WebSocket disconnected');
+        });
+    </script>
+</body>
+</html>

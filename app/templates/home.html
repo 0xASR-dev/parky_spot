@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Parkyspot - Smart Parking Solution</title>
+    <link
+      rel="shortcut icon"
+      href="static/Images/Icon.png"
+      type="image/x-icon"
+    />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="bg-gray-100 font-sans">
+    <!-- Header -->
+    <header class="bg-white shadow-md p-4">
+      <div class="container mx-auto flex justify-between items-center">
+        <div class="flex items-center">
+          <img
+            src="/static/Images/Icon.png"
+            alt="Parkyspot Logo"
+            class="h-8 mr-2"
+          />
+          <!-- Add your logo here -->
+          <h1 class="text-xl font-semibold text-gray-800">Parkyspot</h1>
+        </div>
+        <nav class="space-x-6 text-gray-700 font-medium">
+          <a href="/" class="hover:text-blue-500">Home</a>
+          <a href="#" class="hover:text-blue-500">Book Parking</a>
+          <a
+            href="login"
+            class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+            >Login</a
+          >
+        </nav>
+      </div>
+    </header>
+
+    <!-- Hero section with layered approach -->
+    <section class="relative h-96">
+      <div class="absolute inset-0 z-0">
+        <div
+          class="w-full h-full bg-cover bg-center"
+          style="
+            background-image: url('/static/Images/parking zone.jpg');
+            filter: blur(2px) brightness(0.8);
+          "
+        ></div>
+        <div class="absolute inset-0 bg-black opacity-10"></div>
+      </div>
+
+      <!-- Content layer -->
+      <div class="relative z-10 h-full flex items-center">
+        <div class="container mx-auto text-center text-white px-6">
+          <h2 class="text-4xl font-bold leading-tight text-shadow">
+            Find Parking Made Easy
+          </h2>
+          <p class="text-lg mt-4 text-shadow">
+            Locate and book your parking spot in seconds with real-time
+            availability.
+          </p>
+          <!-- Search form -->
+          <div class="mt-6 flex justify-center">
+            <form id="searchForm" class="flex w-full max-w-lg">
+              <input
+                type="text"
+                id="locationSearch"
+                name="location"
+                placeholder="Search location (e.g., Gole ka Mandir, Gwalior)"
+                class="px-4 py-2 w-full rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                style="color: black"
+              />
+              <button
+                type="submit"
+                class="bg-blue-500 text-white px-6 py-2 rounded-r-md hover:bg-blue-600 transition-colors"
+              >
+                Search
+              </button>
+            </form>
+          </div>
+          <div id="searchResults" class="mt-4 text-center text-gray-800">
+            <!-- Results will appear here -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <style>
+      .text-shadow {
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+      }
+    </style>
+
+    <!-- Nearby Parking Spots -->
+    <section id="parking-spots" class="container mx-auto mt-10 px-4">
+      <h3 class="text-3xl font-bold text-gray-800 mb-6">
+        Nearby Parking Spots
+      </h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Map Section -->
+        <div class="flex justify-center mb-6">
+          <div id="map" style="height: 450px; width: 100%"></div>
+        </div>
+
+        <!-- List of Nearby Parking Areas -->
+        <div class="space-y-4" id="parkingSpotsList">
+          <h4 class="text-lg font-semibold">Available Parking Areas</h4>
+          {% for spot in parking_spot %}
+          <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow"></div>
+            <h4 class="text-lg font-semibold">{{ spot.spot_identifier }}</h4>
+            <p class="text-gray-600">Rate: ₹{{ spot.area_id.hourly_rate }}/hr</p>
+            <div class="mt-2"></div>
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-sm
+                  {% if spot.available %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}"></span>
+                  {{ 'full' if spot.is_occupied else 'available' }}
+              </span>
+              <span class="ml-2 text-sm text-gray-600">
+                {{ spot.occupied_spots }}/{{ spot.total_spots }} spots occupied
+              </span>
+            </div>
+            {% if spot.available %}
+            <button onclick="window.location.href='/slotbooking/{{ spot.id }}'"
+              class="bg-blue-500 text-white mt-4 px-4 py-2 rounded-md hover:bg-blue-600"></button>
+              Book Now
+            </button>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+
+    <!-- static Section -->
+    <section class="bg-gray-200 py-12 mt-12">
+      <div class="container mx-auto text-center">
+        <h3 class="text-3xl font-bold text-gray-800 mb-8">How It Works</h3>
+        <div class="flex justify-center space-x-10">
+          <!-- Step 1 -->
+          <div class="w-1/3 text-center">
+            <div class="text-blue-500 text-5xl font-semibold">
+              <img
+                src="static/Images/parking map.avif"
+                class="h-40 mx-auto mb-4"
+                alt=""
+              />
+            </div>
+            <h4 class="text-lg font-semibold mt-2">Find a Spot</h4>
+            <p class="text-gray-600">
+              Search for available spots near your location.
+            </p>
+          </div>
+          <!-- Step 2 -->
+          <div class="w-1/3 text-center">
+            <div class="text-blue-500 text-5xl font-semibold">
+              <img
+                src="static/Images/Wavy_Bus-42_Single-05.jpg"
+                class="h-40 mx-auto mb-4"
+                alt=""
+              />
+            </div>
+            <h4 class="text-lg font-semibold mt-2">Book a Slot</h4>
+            <p class="text-gray-600">Select a time and confirm your slot.</p>
+          </div>
+          <!-- Step 3 -->
+          <div class="w-1/3 text-center">
+            <div class="text-blue-500 text-5xl font-semibold">
+              <img
+                src="static/Images/park car.jpg"
+                class="h-40 mx-auto mb-4"
+                alt=""
+              />
+            </div>
+            <h4 class="text-lg font-semibold mt-2">Park and Go</h4>
+            <p class="text-gray-600">
+              Check-in with your QR code and park easily.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="container mx-auto py-12">
+      <h3 class="text-3xl font-bold text-gray-800 text-center mb-8">
+        Features
+      </h3>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
+        <div class="text-center">
+          <img
+            src="static/Images/real-time.jpeg"
+            alt="Feature Icon 1"
+            class="h-40 mx-auto mb-4"
+          />
+          <!-- Placeholder for feature icon -->
+          <h4 class="font-semibold text-xl">Real-Time Availability</h4>
+          <p class="text-gray-600">Check live availability of parking slots.</p>
+        </div>
+        <div class="text-center">
+          <img
+            src="static/Images/QR Code.webp"
+            alt="Feature Icon 2"
+            class="h-40 mx-auto mb-4"
+          />
+          <h4 class="font-semibold text-xl">QR Code Access</h4>
+          <p class="text-gray-600">Use a QR code for quick check-in.</p>
+        </div>
+        <div class="text-center">
+          <img
+            src="static/Images/Wavy_Bus-42_Single-05.jpg"
+            alt="Feature Icon 3"
+            class="h-40 mx-auto mb-4"
+          />
+          <h4 class="font-semibold text-xl">Flexible Booking</h4>
+          <p class="text-gray-600">Book by hour or for extended periods.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Call to Action Section -->
+    <section class="bg-blue-500 text-white py-12 text-center">
+      <h3 class="text-3xl font-bold">Ready to Park?</h3>
+      <p class="mt-4">Find a parking spot near you and book with ease!</p>
+      <button
+        onclick="scrollToParking()"
+        class="bg-white text-blue-500 px-6 py-3 mt-6 rounded-md font-semibold hover:bg-gray-100"
+      >
+        Find Parking Near Me
+      </button>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-gray-300 py-8">
+      <div class="container mx-auto text-center">
+        <div class="flex justify-center space-x-6 mb-4">
+          <a href="#" class="hover:text-white">Home</a>
+          <a href="#" class="hover:text-white">About Us</a>
+          <a href="#" class="hover:text-white">Pricing</a>
+          <a href="#" class="hover:text-white">Contact Us</a>
+          <a href="#" class="hover:text-white">Privacy Policy</a>
+        </div>
+        <p>&copy; 2024 Parkyspot. All Rights Reserved.</p>
+      </div>
+    </footer>
+
+    <script>
+      function scrollToParking() {
+        document.getElementById("parking-spots").scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }
+      // Initialize map
+      // Update JavaScript in home.html
+
+      const map = L.map("map").setView([26.2183, 78.1828], 13); // Gwalior coordinates
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(
+        map
+      );
+      let markers = [];
+
+      document
+        .getElementById("searchForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const location = document.getElementById("locationSearch").value;
+          if (!location) return;
+
+          try {
+            // Clear existing markers
+            markers.forEach((marker) => map.removeLayer(marker));
+            markers = [];
+
+            // Geocode searched location
+            const response = await fetch(
+              `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+                location
+              )}`
+            );
+            const data = await response.json();
+
+            if (data.length > 0) {
+              const { lat, lon, display_name } = data[0];
+              map.setView([lat, lon], 15);
+
+              // Add marker for searched location
+              const searchMarker = L.marker([lat, lon])
+                .bindPopup(`<b>Searched Location:</b><br>${display_name}`)
+                .addTo(map);
+              markers.push(searchMarker);
+
+              // Fetch nearby parking spots
+              const parkingResponse = await fetch(
+                `/api/parking-spots?lat=${lat}&lon=${lon}`
+              );
+              const parkingSpots = await parkingResponse.json();
+
+              // Update parking spots list with availability
+              const spotsList = document.getElementById("parkingSpotsList");
+              spotsList.innerHTML = `
+                        <h4 class="text-lg font-semibold">Available Parking Areas</h4>
+                        ${parkingSpots
+                          .map(
+                            (spot) => `
+                            <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+                                <h4 class="text-lg font-semibold">${
+                                  spot.name
+                                }</h4>
+                                <p class="text-gray-600">Rate: ₹${
+                                  spot.rate
+                                }/hr</p>
+                                <div class="mt-2">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm
+                                        ${
+                                          spot.available
+                                            ? "bg-green-100 text-green-800"
+                                            : "bg-red-100 text-red-800"
+                                        }">
+                                        ${spot.available ? "Available" : "Full"}
+                                    </span>
+                                    <span class="ml-2 text-sm text-gray-600">
+                                        ${spot.occupied_spots}/${
+                              spot.total_spots
+                            } spots occupied
+                                    </span>
+                                </div>
+                                ${
+                                  spot.available
+                                    ? `
+                                    <button onclick="window.location.href='/slotbooking/${spot.id}'"
+                                            class="bg-blue-500 text-white mt-4 px-4 py-2 rounded-md hover:bg-blue-600">
+                                        Book Now
+                                    </button>
+                                `
+                                    : ""
+                                }
+                            </div>
+                        `
+                          )
+                          .join("")}
+                    `;
+
+              // Add parking spot markers with availability status
+              parkingSpots.forEach((spot) => {
+                const parkingMarker = L.marker([spot.lat, spot.lon], {
+                  icon: L.divIcon({
+                    className: `parking-marker ${
+                      spot.available ? "available" : "full"
+                    }`,
+                    html: `<div class="marker-pin ${
+                      spot.available ? "bg-green-500" : "bg-red-500"
+                    }"></div>`,
+                  }),
+                })
+                  .bindPopup(
+                    `
+                            <b>${spot.name}</b><br>
+                            Rate: ₹${spot.rate}/hr<br>
+                            Status: ${spot.available ? "Available" : "Full"}<br>
+                            Spots: ${spot.occupied_spots}/${spot.total_spots}
+                        `
+                  )
+                  .addTo(map);
+                markers.push(parkingMarker);
+              });
+            }
+          } catch (error) {
+            console.error("Error:", error);
+            document.getElementById("parkingSpotsList").innerHTML =
+              '<div class="text-center text-red-500">Error searching location</div>';
+          }
+        });
+
+      // Add WebSocket connection for real-time updates from ESP32
+      const ws = new WebSocket("ws://your-server/ws");
+      ws.onmessage = function (event) {
+        const data = JSON.parse(event.data);
+        // Update availability status in UI and markers
+        updateParkingStatus(data);
+      };
+    </script>
+
+    <style>
+      .parking-marker {
+        width: 30px;
+        height: 30px;
+      }
+      .marker-pin {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        border: 2px solid white;
+      }
+    </style>
+  </body>
+</html>

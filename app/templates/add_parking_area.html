@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Parking Area</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+</head>
+<body class="bg-gray-100">
+    <nav class="bg-indigo-600 text-white p-4">
+        <div class="max-w-7xl mx-auto">
+            <a href="/" class="text-xl font-bold">Smart Parking</a>
+        </div>
+    </nav>
+
+    <div class="max-w-2xl mx-auto py-8 px-4">
+        <h1 class="text-2xl font-bold mb-6">Add New Parking Area</h1>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Form Section -->
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <form method="POST" action="/add-parking-area" class="space-y-4">
+                    <div>
+                        <label for="name" class="block text-sm font-medium text-gray-700">Area Name</label>
+                        <input type="text" 
+                               id="name" 
+                               name="name" 
+                               required 
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    </div>
+
+                    <div>
+                        <label for="latitude" class="block text-sm font-medium text-gray-700">Latitude</label>
+                        <input type="number" 
+                               id="latitude" 
+                               name="latitude" 
+                               step="any" 
+                               required 
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    </div>
+
+                    <div>
+                        <label for="longitude" class="block text-sm font-medium text-gray-700">Longitude</label>
+                        <input type="number" 
+                               id="longitude" 
+                               name="longitude" 
+                               step="any" 
+                               required 
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    </div>
+
+                    <div>
+                        <label for="hourly_rate" class="block text-sm font-medium text-gray-700">Hourly Rate (₹)</label>
+                        <input type="number" 
+                               id="hourly_rate" 
+                               name="hourly_rate" 
+                               min="0" 
+                               step="0.01" 
+                               required 
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    </div>
+
+                    <div>
+                        <label for="total_spots" class="block text-sm font-medium text-gray-700">Total Parking Spots</label>
+                        <input type="number" 
+                               id="total_spots" 
+                               name="total_spots" 
+                               min="1" 
+                               required 
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    </div>
+
+                    <div class="flex justify-end space-x-3">
+                        <a href="/" 
+                           class="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300">
+                            Cancel
+                        </a>
+                        <button type="submit" 
+                                class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">
+                            Add Parking Area
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Map Section -->
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <div id="map" class="h-96 rounded-md"></div>
+                <p class="mt-2 text-sm text-gray-600">Click on the map to set location</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize map
+        const map = L.map('map').setView([20.5937, 78.9629], 5);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        let marker;
+
+        // Handle map clicks
+        map.on('click', function(e) {
+            const { lat, lng } = e.latlng;
+            
+            // Update form fields
+            document.getElementById('latitude').value = lat.toFixed(6);
+            document.getElementById('longitude').value = lng.toFixed(6);
+            
+            // Update or add marker
+            if (marker) {
+                marker.setLatLng([lat, lng]);
+            } else {
+                marker = L.marker([lat, lng]).addTo(map);
+            }
+        });
+
+        // If geolocation is available, center map on user's location
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(position => {
+                const { latitude, longitude } = position.coords;
+                map.setView([latitude, longitude], 13);
+            });
+        }
+    </script>
+</body>
+</html>

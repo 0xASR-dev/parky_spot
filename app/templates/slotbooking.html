@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Parkyspot - Book a Slot</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-gray-50 min-h-screen">
+  <!-- Header -->
+  <nav class="bg-white shadow-lg fixed w-full top-0 z-50">
+    <div class="container mx-auto px-6 py-3">
+      <div class="flex justify-between items-center">
+        <div class="flex items-center space-x-3">
+          <img src="/static/Images/Icon.png" alt="Parkyspot" class="h-10 w-10 transition-transform hover:scale-110">
+          <a href="{{ url_for('main.index') }}" class="text-2xl font-bold text-blue-600">Parkyspot</a>
+        </div>
+        <div class="space-x-4">
+          {% if 'user_id' in session %}
+          <a href="{{ url_for('main.dashboard') }}" class="text-gray-600 hover:text-blue-500">Dashboard</a>
+          <a href="{{ url_for('main.logout') }}" class="bg-red-500 text-white px-4 py-2 rounded-full hover:bg-red-600 transition-colors">Logout</a>
+          {% else %}
+          <a href="{{ url_for('main.login') }}" class="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition-colors">Login</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="container mx-auto px-4 pt-20 pb-10">
+    <!-- Alerts -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="space-y-2">
+      {% for category, message in messages %}
+      <div class="p-4 rounded-lg animate__animated animate__fadeIn
+        {% if category == 'error' %}bg-red-100 text-red-700
+        {% elif category == 'success' %}bg-green-100 text-green-700
+        {% else %}bg-blue-100 text-blue-700{% endif %}">
+        {{ message }}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <!-- Spot Details Card -->
+    <div class="bg-white rounded-xl shadow-sm p-6 mt-6">
+      <h1 class="text-3xl font-bold text-blue-600">{{ spot.name }}</h1>
+      <p class="text-gray-600 mt-2 text-xl">₹{{ spot.rate_per_hour }}/hour</p>
+    </div>
+
+    <!-- Slot Selection -->
+    <div class="bg-white rounded-xl shadow-sm p-6 mt-6">
+      <h2 class="text-2xl font-bold text-gray-800 mb-6">Available Slots</h2>
+      <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        {% for slot in range(1, spot.total_spots + 1) %}
+        <button 
+          class="p-4 rounded-lg text-center font-medium transition-all duration-200
+          {% if slot in occupied_slots %}
+            bg-red-100 text-red-700 cursor-not-allowed
+          {% elif slot in reserved_slots %}
+            bg-yellow-100 text-yellow-700 cursor-not-allowed
+          {% else %}
+            bg-green-100 text-green-700 hover:bg-green-200 hover:scale-105
+          {% endif %}"
+          {% if slot not in occupied_slots and slot not in reserved_slots %}
+          onclick="selectSlot({{ slots.index(slot) }})"
+          {% endif %}>
+          Slot {{ slot }}
+        </button>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Booking Form -->
+    <form action="{{ url_for('main.book_slot', spot_id=spot.id) }}" method="POST" class="bg-white rounded-xl shadow-sm p-6 mt-6">
+      <input type="hidden" name="selected_slot" id="selected_slot">
+      <input type="hidden" name="selected_time" id="selected_time">
+
+      <h2 class="text-2xl font-bold text-gray-800 mb-6">Select Time Slot</h2>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {% for time_slot in available_times %}
+        <button type="button" 
+          onclick="selectTime('{{ time_slot }}')"
+          class="time-slot p-4 rounded-lg transition-all duration-200
+          {% if time_slot in booked_times %}
+            bg-red-100 text-red-700 cursor-not-allowed
+          {% else %}
+            bg-gray-100 text-gray-700 hover:bg-blue-100 hover:scale-105
+          {% endif %}">
+          {{ time_slot }}
+        </button>
+        {% endfor %}
+      </div>
+
+      <button type="submit" 
+        id="submit_button"
+        disabled
+        class="w-full mt-8 bg-blue-500 text-white py-4 rounded-lg font-bold hover:bg-blue-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed">
+        Confirm Booking
+      </button>
+    </form>
+  </main>
+
+  <script>
+    let selectedSlot = null;
+    let selectedTime = null;
+
+    function selectSlot(slotNumber) {
+      selectedSlot = slotNumber;
+      document.getElementById('selected_slot').value = slotNumber;
+      updateSubmitButton();
+    }
+
+    function selectTime(timeSlot) {
+      selectedTime = timeSlot;
+      document.getElementById('selected_time').value = timeSlot;
+      updateSubmitButton();
+    }
+
+    function updateSubmitButton() {
+      const submitButton = document.getElementById('submit_button');
+      submitButton.disabled = !(selectedSlot && selectedTime);
+    }
+  </script>
+</body>
+</html>
